@@ -1,0 +1,36 @@
+
+create table `ores-groupass2.covid_dataset.V_Final_table`
+as 
+SELECT distinct (CONCAT(cast (T2.Year as string),'-', cast (T2.Month as string),'-' ,T2.state)) As T_id,  
+T2.Year, T2.MONTH, T2.state, sum(T2.case_total_count) AS cases_monthly_amount,
+T6.yr2021 AS yr2021_population, T6.yr2022 AS yr2022_population, --T1.total_beds_7_day_avg,
+T7.yr2021_GDP, T7.yr2022_GDP,T3.monthly_negative, T3.monthly_positive, T3.monthly_total_test_results,
+T5.hospital_name,T5.total_beds_7_day_avg,T5.total_patients_hospitalized_confirmed_influenza_and_covid_7_day_coverage,
+T1.people_fully_vaccinated_per_hundred 
+ 
+FROM 
+ `ores-groupass2.covid_dataset.V_COVID_19_Case`  AS T2
+left join `ores-groupass2.covid_dataset.V_vacaccination_2` AS T1
+ON cast(T1.Year as string)  = T2.Year 
+AND cast( T1.MONTH as string) = T2.MONTH 
+AND T1.Postal =T2.state
+left join `ores-groupass2.covid_dataset.V_state_testing_and_outcomes` AS T3
+ON T2.Year =  cast (T3.year as string)
+AND T2.MONTH =cast (T3.month  as string)
+AND T2.state =T3.state
+/*
+Response too large to return. Consider specifying a destination table in your job configuration. For more details
+*/
+left join `ores-groupass2.covid_dataset.V_COVID_19_Hospital_Capacity_by_Facility` AS T5
+ON T2.Year =  cast (T5.year as string)
+AND T2.MONTH =cast (T5.month  as string)
+AND T2.state =T5.state
+left join `ores-groupass2.covid_dataset.V_population` AS T6
+ON T2.state = T6.postal
+left join `ores-groupass2.covid_dataset.V_GDP` AS T7
+ON T2.state = T7.Postal
+--where T2.age_group != '65+ years' AND monthly_negative is not null
+group by T2.Year, T2.MONTH, T2.state, T6.yr2021, T6.yr2022 , --T1.total_beds_7_day_avg,
+T7.yr2021_GDP, T7.yr2022_GDP,T3.monthly_negative, T3.monthly_positive, T3.monthly_total_test_results,
+T5.hospital_name,T5.total_beds_7_day_avg,T5.total_patients_hospitalized_confirmed_influenza_and_covid_7_day_coverage,
+T1.people_fully_vaccinated_per_hundred 
